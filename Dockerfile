@@ -4,6 +4,9 @@ RUN apt-get update && apt-get install -y git curl && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g opencode-ai
 
+# 构建阶段预执行 opencode models 缓存模型列表
+RUN timeout 30 opencode models 2>&1 > /models.txt || echo "models command timeout" > /models.txt
+
 RUN curl -fsSL https://raw.githubusercontent.com/multica-ai/multica/main/scripts/install.sh | bash
 
 COPY status.js /status.js
