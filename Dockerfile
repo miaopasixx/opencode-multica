@@ -4,8 +4,12 @@ RUN apt-get update && apt-get install -y git curl && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g opencode-ai
 
-# 构建阶段预执行 opencode models 缓存模型列表
-RUN timeout 30 opencode models 2>&1 > /models.txt || echo "models command timeout" > /models.txt
+# 创建 opencode 配置目录和文件，使无头环境下也能工作
+RUN mkdir -p /root/.config/opencode
+RUN echo '{"$schema":"https://opencode.ai/config.json","model":"opencode/deepseek-v4-flash-free","small_model":"opencode/qwen3.6-plus-free","provider":{"zen":{}}}' > /root/.config/opencode/opencode.json
+
+# 构建阶段预执行，确保 opencode 可正常运行
+RUN timeout 30 opencode models 2>&1 > /models.txt || echo "TIMEOUT" > /models.txt
 
 RUN curl -fsSL https://raw.githubusercontent.com/multica-ai/multica/main/scripts/install.sh | bash
 
