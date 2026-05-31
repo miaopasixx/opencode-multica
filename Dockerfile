@@ -10,13 +10,6 @@ CMD export OPENCODE_API_KEY=${OPENCODE_API_KEY} && \
     multica config set server_url https://api.multica.ai && \
     multica config set app_url https://multica.ai && \
     echo "$MULTICA_TOKEN" | multica login --token && \
-    opencode models --refresh && \
-    echo ">>> cache size: $(wc -c < /root/.cache/opencode/models.json)" && \
+    opencode models --refresh 2>&1 | head -5 && \
     multica daemon start && \
-    sleep 15 && \
-    echo "=== DAEMON LOGS ===" && \
-    tail -50 /root/.multica/daemon.log && \
-    echo "=== OPENCODE MODEL RAW ===" && \
-    opencode models --refresh 2>&1 && \
-    multica daemon status && \
-    node -e "require('http').createServer((q,r)=>{const c=require('child_process');let o='';try{o=c.execSync('opencode models --refresh 2>&1',{timeout:30000}).toString()}catch(e){o=e.toString()}const m=c.execSync('multica daemon status 2>&1').toString();r.writeHead(200,{'Content-Type':'text/html;charset=utf-8'});r.end('<pre>'+m+'\n--- OpenCode Models ('+o.split('\\n').length+'):\n'+o+'</pre>')}).listen(process.env.PORT||10000)"
+    node -e "const h=require('http'),c=require('child_process');h.createServer((q,r)=>{r.writeHead(200,{'Content-Type':'text/html;charset=utf-8'});let o='';try{o=c.execSync('opencode models 2>&1',{timeout:15000,env:{...process.env,OPENCODE_API_KEY:process.env.OPENCODE_API_KEY}}).toString()}catch(e){o=e.toString()}r.end('<pre>'+c.execSync('multica daemon status 2>&1').toString()+'--- OpenCode ('+o.split(/\\r?\\n/).filter(Boolean).length+'): '+o.substring(0,500)+'</pre>')}).listen(process.env.PORT||10000)"
